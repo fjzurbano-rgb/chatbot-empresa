@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asistente Corporativo Soldigas</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:   #0F1F3D;
+      --blue:   #1A3A6B;
+      --accent: #2D7DD2;
+      --sky:    #E8F1FB;
+      --white:  #FFFFFF;
+      --mist:   #F5F7FA;
+      --stone:  #8A95A3;
+      --ink:    #1C2B3A;
+      --border: #D6DFE8;
+      --red:    #DC2626;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* ── Login screen ── */
+    .login-screen {
+      width: 100%; max-width: 420px;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.35);
+      text-align: center;
+    }
+    .login-logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--accent), #63A9F0);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 20px;
+    }
+    .login-screen h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px; color: var(--navy); margin-bottom: 6px;
+    }
+    .login-screen p { font-size: 13px; color: var(--stone); margin-bottom: 28px; }
+    .login-screen input {
+      width: 100%; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      font-family: inherit; font-size: 15px;
+      color: var(--ink); background: var(--mist);
+      outline: none; transition: border-color .15s;
+      margin-bottom: 14px; text-align: center;
+    }
+    .login-screen input:focus { border-color: var(--accent); background: var(--white); }
+    .login-screen input::placeholder { color: var(--stone); }
+    .btn-login {
+      width: 100%; background: var(--accent); color: var(--white);
+      border: none; border-radius: 10px; padding: 13px;
+      font-size: 15px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-login:hover { opacity: .88; }
+    .login-note { font-size: 11px; color: var(--stone); margin-top: 16px; }
+
+    /* ── App shell ── */
+    .shell {
+      display: none;
+      width: 100%; max-width: 860px;
+      height: 92vh; max-height: 880px;
+      background: var(--white);
+      border-radius: 20px;
+      overflow: hidden;
+      flex-direction: row;
+      box-shadow: 0 32px 80px rgba(0,0,0,.35);
+    }
+    .shell.visible { display: flex; }
+
+    /* Sidebar */
+    .sidebar { width: 260px; background: var(--mist); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { background: var(--blue); padding: 20px 16px 16px; flex-shrink: 0; }
+    .sidebar-header h2 { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--white); margin-bottom: 2px; }
+    .sidebar-header p { font-size: 11px; color: rgba(255,255,255,.55); }
+    .doc-list { flex: 1; overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px; }
+    .doc-list::-webkit-scrollbar { width: 3px; }
+    .doc-list::-webkit-scrollbar-thumb { background: var(--border); }
+    .doc-item { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; transition: border-color .15s; }
+    .doc-item:hover { border-color: var(--accent); }
+    .doc-item-top { display: flex; align-items: flex-start; gap: 8px; }
+    .doc-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .doc-name { font-size: 13px; font-weight: 600; color: var(--ink); flex: 1; word-break: break-word; }
+    .doc-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .doc-btn { background: none; border: none; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 4px; opacity: .55; transition: opacity .15s; }
+    .doc-btn:hover { opacity: 1; background: var(--mist); }
+    .doc-meta { font-size: 11px; color: var(--stone); margin-top: 4px; }
+    .empty-docs { text-align: center; padding: 30px 16px; color: var(--stone); font-size: 13px; line-height: 1.6; }
+    .empty-docs .big { font-size: 28px; margin-bottom: 8px; }
+    .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); flex-shrink: 0; display: none; }
+    .sidebar-footer.admin { display: block; }
+    .btn-add-doc { width: 100%; background: var(--accent); color: var(--white); border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity .15s; }
+    .btn-add-doc:hover { opacity: .88; }
+    .sidebar-config { padding: 8px 10px 0; border-top: 1px solid var(--border); display: none; }
+    .sidebar-config.admin { display: block; }
+    .btn-config { width: 100%; background: none; color: var(--stone); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px; font-size: 12px; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: color .15s, border-color .15s; margin-bottom: 10px; }
+    .btn-config:hover { color: var(--ink); border-color: var(--accent); }
+
+    /* User badge */
+    .user-badge { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .user-avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .user-role { font-size: 11px; color: var(--stone); }
+    .btn-logout { background: none; border: none; cursor: pointer; font-size: 14px; opacity: .5; transition: opacity .15s; }
+    .btn-logout:hover { opacity: 1; }
+
+    /* Main chat */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .header { background: var(--blue); padding: 16px 22px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .logo-ring { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), #63A9F0); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .header-text h1 { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--white); }
+    .header-text p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; margin-left: auto; box-shadow: 0 0 0 3px rgba(74,222,128,.25); animation: pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 3px rgba(74,222,128,.25)} 50%{box-shadow:0 0 0 6px rgba(74,222,128,.1)} }
+    .messages { flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .msg { display: flex; gap: 10px; max-width: 82%; animation: fadeUp .22s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+    .msg.bot { align-self: flex-start; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .avatar { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+    .msg.bot .avatar { background: var(--sky); }
+    .bubble { padding: 11px 15px; border-radius: 14px; font-size: 13.5px; line-height: 1.65; }
+    .msg.bot .bubble { background: var(--mist); border-top-left-radius: 4px; color: var(--ink); }
+    .msg.user .bubble { background: var(--accent); color: var(--white); border-top-right-radius: 4px; }
+    .bubble p { margin-bottom: 8px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble ul { padding-left: 18px; margin: 4px 0; }
+    .bubble li { margin-bottom: 3px; }
+    .bubble strong { font-weight: 600; }
+    .typing .bubble { display: flex; align-items: center; gap: 5px; padding: 14px 18px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--stone); animation: bounce 1.2s ease-in-out infinite; }
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+    .chips-row { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 22px 14px; }
+    .chip { background: var(--sky); color: var(--accent); border: 1.5px solid #BCD9F5; border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: background .15s, transform .1s; }
+    .chip:hover { background: #D2E8FA; }
+    .chip:active { transform: scale(.95); }
+    .input-area { border-top: 1px solid var(--border); padding: 14px 18px; display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0; }
+    #userInput { flex: 1; border: 1.5px solid var(--border); border-radius: 11px; padding: 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--ink); background: var(--mist); outline: none; resize: none; max-height: 110px; overflow-y: auto; line-height: 1.5; transition: border-color .15s; }
+    #userInput:focus { border-color: var(--accent); background: var(--white); }
+    #userInput::placeholder { color: var(--stone); }
+    #sendBtn { width: 42px; height: 42px; border-radius: 11px; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity .15s, transform .1s; }
+    #sendBtn:hover { opacity: .88; }
+    #sendBtn:active { transform: scale(.93); }
+    #sendBtn svg { width: 17px; height: 17px; fill: white; }
+    .footer-note { text-align: center; font-size: 11px; color: var(--stone); padding: 0 18px 10px; }
+
+    /* Modals */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 16px; padding: 28px; width: 100%; max-width: 520px; margin: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.3); max-height: 90vh; overflow-y: auto; }
+    .modal h2 { font-family: 'DM Serif Display', serif; font-size: 19px; margin-bottom: 4px; color: var(--navy); }
+    .modal .subtitle { font-size: 13px; color: var(--stone); margin-bottom: 20px; }
+    .modal label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--stone); margin-bottom: 5px; }
+    .modal input, .modal textarea, .modal select { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: 13.5px; color: var(--ink); background: var(--mist); outline: none; transition: border-color .15s; margin-bottom: 14px; }
+    .modal textarea { resize: vertical; min-height: 130px; }
+    .modal input:focus, .modal textarea:focus { border-color: var(--accent); background: var(--white); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    .btn { padding: 9px 20px; border-radius: 8px; font-size: 13.5px; font-family: inherit; font-weight: 500; cursor: pointer; border: none; transition: opacity .15s, transform .1s; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: var(--white); }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { background: var(--mist); color: var(--ink); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-danger { background: #FEE2E2; color: var(--red); }
+    .btn-danger:hover { background: #FECACA; }
+
+    /* Admin panel */
+    .admin-banner { background: #F0FDF4; border-bottom: 1px solid #BBF7D0; padding: 8px 20px; font-size: 12px; color: #166534; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--navy); color: var(--white); padding: 10px 20px; border-radius: 99px; font-size: 13px; opacity: 0; transition: opacity .25s, transform .25s; z-index: 999; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Login -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-logo">🏢</div>
+  <h1>Asistente Corporativo</h1>
+  <p>Introduce tu nombre para acceder al asistente interno de Soldigas</p>
+  <input type="text" id="nameInput" placeholder="Tu nombre y apellido" maxlength="50" />
+  <input type="password" id="adminPassInput" placeholder="Contraseña admin (opcional)" maxlength="30" />
+  <button class="btn-login" onclick="doLogin()">Entrar</button>
+  <p class="login-note">Solo empleados de Soldigas</p>
+</div>
+
+<!-- Modal Documento -->
+<div class="modal-overlay" id="modalDoc">
+  <div class="modal">
+    <h2 id="modalDocTitle">Añadir documento</h2>
+    <p class="subtitle">Pega el contenido. Cuanta más información, mejores respuestas.</p>
+    <label>Nombre del documento</label>
+    <input type="text" id="docName" placeholder="Ej. Manual del empleado…" />
+    <label>Categoría</label>
+    <select id="docCat">
+      <option value="📋 Funciones y roles">📋 Funciones y roles</option>
+      <option value="🏖️ Vacaciones y permisos">🏖️ Vacaciones y permisos</option>
+      <option value="💼 Beneficios">💼 Beneficios</option>
+      <option value="📝 Onboarding">📝 Onboarding</option>
+      <option value="🏢 Organización">🏢 Organización</option>
+      <option value="📜 Políticas internas">📜 Políticas internas</option>
+      <option value="💻 Tecnología y herramientas">💻 Tecnología y herramientas</option>
+      <option value="📦 Otro">📦 Otro</option>
+    </select>
+    <label>Contenido</label>
+    <textarea id="docContent" placeholder="Pega aquí el texto del documento…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalDoc')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Guardar documento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal" style="max-width:380px">
+    <h2>Eliminar documento</h2>
+    <p class="subtitle" id="deleteMsg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalDelete')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="shell" id="appShell">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>📚 Base de conocimiento</h2>
+      <p id="docCount">0 documentos</p>
+    </div>
+    <div class="doc-list" id="docList"></div>
+    <div class="sidebar-footer" id="sidebarFooter">
+      <button class="btn-add-doc" onclick="openAddDoc()">＋ Añadir documento</button>
+    </div>
+    <div class="sidebar-config" id="sidebarConfig">
+      <button class="btn-config" onclick="exportConversations()">📊 Ver conversaciones en Excel</button>
+    </div>
+    <div class="user-badge">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userNameBadge">-</div>
+        <div class="user-role" id="userRoleBadge">Usuario</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">🚪</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div class="logo-ring">🏢</div>
+      <div class="header-text">
+        <h1>Asistente Corporativo Soldigas</h1>
+        <p>Resuelve tus dudas sobre funciones y procesos internos</p>
+      </div>
+      <div class="status-dot"></div>
+    </div>
+
+    <div class="admin-banner" id="adminBanner" style="display:none">
+      🛡️ Modo administrador activo — puedes gestionar documentos y ver conversaciones
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="chips-row">
+      <button class="chip" onclick="sendChip(this)">📋 ¿Cuáles son mis funciones?</button>
+      <button class="chip" onclick="sendChip(this)">🏖️ Política de vacaciones</button>
+      <button class="chip" onclick="sendChip(this)">💼 Beneficios laborales</button>
+      <button class="chip" onclick="sendChip(this)">📝 Proceso de onboarding</button>
+    </div>
+
+    <div class="input-area">
+      <textarea id="userInput" rows="1" placeholder="Escribe tu pregunta…"></textarea>
+      <button id="sendBtn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="footer-note">Las respuestas se basan en los documentos cargados. Verifica con RRHH para temas oficiales.</div>
+  </div>
+</div>
+
+<script>
+  const WORKER_URL  = 'https://chatbot-proxy.fjzurbano.workers.dev';
+  const ADMIN_PASS  = 'soldigas2024'; // Cambia esta contraseña
+
+  let currentUser  = null;
+  let isAdmin      = false;
+  let docs         = [];
+  let history      = [];
+  let isTyping     = false;
+  let editingDocId = null;
+  let deletingDocId = null;
+
+  // ── Login ──
+  function doLogin() {
+    const name = document.getElementById('nameInput').value.trim();
+    const pass = document.getElementById('adminPassInput').value.trim();
+    if (!name) { showToast('⚠️ Escribe tu nombre'); return; }
+
+    currentUser = name;
+    isAdmin = (pass === ADMIN_PASS);
+
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').classList.add('visible');
+
+    // Badge
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('userNameBadge').textContent = name;
+    document.getElementById('userRoleBadge').textContent = isAdmin ? '🛡️ Administrador' : 'Empleado';
+
+    // Admin UI
+    if (isAdmin) {
+      document.getElementById('adminBanner').style.display = 'flex';
+      document.getElementById('sidebarFooter').classList.add('admin');
+      document.getElementById('sidebarConfig').classList.add('admin');
+    }
+
+    // Cargar docs
+    const savedDocs = localStorage.getItem('cb_docs');
+    if (savedDocs) docs = JSON.parse(savedDocs);
+    renderDocList();
+    addWelcomeMessage();
+  }
+
+  function doLogout() {
+    currentUser = null; isAdmin = false; history = [];
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appShell').classList.remove('visible');
+    document.getElementById('messages').innerHTML = '';
+    document.getElementById('nameInput').value = '';
+    document.getElementById('adminPassInput').value = '';
+    document.getElementById('adminBanner').style.display = 'none';
+    document.getElementById('sidebarFooter').classList.remove('admin');
+    document.getElementById('sidebarConfig').classList.remove('admin');
+  }
+
+  // ── Docs ──
+  function openAddDoc() {
+    editingDocId = null;
+    document.getElementById('modalDocTitle').textContent = 'Añadir documento';
+    document.getElementById('docName').value    = '';
+    document.getElementById('docCat').value     = '📋 Funciones y roles';
+    document.getElementById('docContent').value = '';
+    openModal('modalDoc');
+  }
+
+  function openEditDoc(id) {
+    const doc = docs.find(d => d.id === id);
+    if (!doc) return;
+    editingDocId = id;
+    document.getElementById('modalDocTitle').textContent = 'Editar documento';
+    document.getElementById('docName').value    = doc.name;
+    document.getElementById('docCat').value     = doc.category;
+    document.getElementById('docContent').value = doc.content;
+    openModal('modalDoc');
+  }
+
+  function saveDoc() {
+    const name    = document.getElementById('docName').value.trim();
+    const cat     = document.getElementById('docCat').value;
+    const content = document.getElementById('docContent').value.trim();
+    if (!name)    { showToast('⚠️ Escribe un nombre'); return; }
+    if (!content) { showToast('⚠️ El contenido no puede estar vacío'); return; }
+    if (editingDocId) {
+      const idx = docs.findIndex(d => d.id === editingDocId);
+      docs[idx] = { ...docs[idx], name, category: cat, content, date: new Date().toLocaleDateString('es-ES') };
+      showToast('✅ Documento actualizado');
+    } else {
+      docs.push({ id: Date.now().toString(), name, category: cat, content, date: new Date().toLocaleDateString('es-ES') });
+      showToast('✅ Documento añadido');
+    }
+    localStorage.setItem('cb_docs', JSON.stringify(docs));
+    renderDocList();
+    closeModal('modalDoc');
+  }
+
+  function openDeleteDoc(id) {
+    deletingDocId = id;
+    const doc = docs.find(d => d.id === id);
+    document.getElementById('deleteMsg').textContent = `¿Seguro que quieres eliminar "${doc.name}"?`;
+    openModal('modalDelete');
+  }
+
+  function confirmDelete() {
+    docs = docs.filter(d => d.id !== deletingDocId);
+    localStorage.setItem('cb_docs', JSON.stringify(docs));
+    renderDocList();
+    closeModal('modalDelete');
+    showToast('🗑️ Documento eliminado');
+    deletingDocId = null;
+  }
+
+  function renderDocList() {
+    const el = document.getElementById('docList');
+    document.getElementById('docCount').textContent = docs.length === 1 ? '1 documento' : `${docs.length} documentos`;
+    if (docs.length === 0) {
+      el.innerHTML = `<div class="empty-docs"><div class="big">📂</div>Aún no hay documentos.</div>`;
+      return;
+    }
+    el.innerHTML = docs.map(doc => `
+      <div class="doc-item">
+        <div class="doc-item-top">
+          <span class="doc-icon">${doc.category.split(' ')[0]}</span>
+          <span class="doc-name">${escHtml(doc.name)}</span>
+          ${isAdmin ? `<div class="doc-actions">
+            <button class="doc-btn" onclick="openEditDoc('${doc.id}')">✏️</button>
+            <button class="doc-btn" onclick="openDeleteDoc('${doc.id}')">🗑️</button>
+          </div>` : ''}
+        </div>
+        <div class="doc-meta">${escHtml(doc.category)} · ${doc.date}</div>
+      </div>`).join('');
+  }
+
+  function exportConversations() {
+    window.open('https://soldigas-my.sharepoint.com/:x:/r/personal/soldigas_soldigas_onmicrosoft_com/_layouts/15/Doc.aspx?sourcedoc=%7BD62D55DA-B428-465B-B491-787E742B4070%7D', '_blank');
+  }
+
+  // ── Modals ──
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // ── Chat ──
+  function addWelcomeMessage() {
+    const extra = docs.length > 0
+      ? `Tengo acceso a **${docs.length} documento${docs.length > 1 ? 's' : ''}** con información de Soldigas.`
+      : 'Aún no hay documentos cargados.';
+    addBotMessage(`👋 Hola **${currentUser}**, soy tu asistente corporativo de Soldigas.\n\n${extra}\n\n¿En qué te puedo ayudar hoy?`);
+  }
+
+  function sendChip(btn) {
+    document.getElementById('userInput').value = btn.textContent.trim().replace(/^[^\wáéíóúÁÉÍÓÚ¿¡]+/, '').trim();
+    sendMessage();
+  }
+
+  function addBotMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.innerHTML = `<div class="avatar">🏢</div><div class="bubble">${formatText(text)}</div>`;
+    document.getElementById('messages').appendChild(div);
+    scrollDown();
+  }
+
+  function addUserMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'msg user';
+    div.innerHTML = `<div class="bubble">${escHtml(text)}</div>`;
+    document.getElementById('messages').appendChild(div);
+    scrollDown();
+  }
+
+  function showTypingIndicator() {
+    const div = document.createElement('div');
+    div.className = 'msg bot typing'; div.id = 'typingIndicator';
+    div.innerHTML = `<div class="avatar">🏢</div><div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    document.getElementById('messages').appendChild(div);
+    scrollDown();
+  }
+
+  function removeTypingIndicator() {
+    const t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+  }
+
+  async function sendMessage() {
+    if (isTyping) return;
+    const input = document.getElementById('userInput');
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+    addUserMessage(text);
+    history.push({ role: 'user', content: text });
+    isTyping = true;
+    showTypingIndicator();
+
+    const reply = await callWorker(text);
+    removeTypingIndicator();
+    isTyping = false;
+    history.push({ role: 'assistant', content: reply });
+    addBotMessage(reply);
+
+    // Guardar en Excel
+    saveConversation(text, reply);
+  }
+
+  async function callWorker(userText) {
+    try {
+      const messages = [
+        { role: 'system', content: buildSystemPrompt() },
+        ...history
+      ];
+      const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'chat', messages })
+      });
+      if (!res.ok) throw new Error('Error ' + res.status);
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || 'No pude generar una respuesta.';
+    } catch (e) {
+      return '❌ Error de conexión. Comprueba tu conexión a internet.';
+    }
+  }
+
+  async function saveConversation(userMessage, botResponse) {
+    try {
+      await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'saveConversation',
+          userName: currentUser,
+          userMessage,
+          botResponse
+        })
+      });
+    } catch (e) {
+      console.warn('No se pudo guardar la conversación:', e);
+    }
+  }
+
+  function buildSystemPrompt() {
+    const parts = [
+      `Eres un asistente corporativo interno de Soldigas. Ayudas a los trabajadores con dudas sobre funciones, políticas y procesos internos.`,
+      `El usuario se llama ${currentUser}.`,
+      `Responde siempre en español, de forma clara y profesional. Usa listas cuando haya varios puntos.`,
+      `Si no tienes información suficiente, indícalo y sugiere consultar con RRHH o el supervisor.`,
+    ];
+    if (docs.length > 0) {
+      parts.push('\n--- DOCUMENTOS INTERNOS ---');
+      docs.forEach((doc, i) => parts.push(`\n[DOC ${i+1}: ${doc.name} | ${doc.category}]\n${doc.content}`));
+      parts.push('\n--- FIN ---');
+    }
+    return parts.join('\n');
+  }
+
+  function formatText(t) {
+    return '<p>' + t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+  }
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function scrollDown() { const el = document.getElementById('messages'); el.scrollTop = el.scrollHeight; }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('userInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    document.getElementById('userInput').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+    });
+  });
+</script>
+</body>
+</html>
